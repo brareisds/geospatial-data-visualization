@@ -1,11 +1,10 @@
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
-from matplotlib.colors import LinearSegmentedColormap
 import geopandas as gpd
-import numpy as np
 import pandas as pd
 import imageio
 import os
+from datetime import datetime
 
 # Load data
 df = pd.read_csv('locations_info.csv')
@@ -22,64 +21,69 @@ country_mapping = {
     'The Netherlands': 'Netherlands'
 }
 
-# Definir os intervalos de valores e as cores correspondentes
-value_intervals = [(1, 10000), (10000, 50000), (50000, 100000), (100000, 250000), (250000, 500000), (500000, float('inf'))]
+colors_hex = ['#fee5d9','#fcbba1','#fc9272','#fb6a4a','#ef3b2c','#cb181d','#99000d']
+# Crie uma paleta de cores personalizada usando as cores RGBA
+custom_cmap = ListedColormap(colors_hex)
 
-colors_rgba = [
-    [1.0, 0.96078431, 0.92156863, 1.0],  # Cor para 1 a 10 mil
-    [0.99551821, 0.88963585, 0.78319328, 1.0],  # Cor para 10 mil a 50 mil
-    [0.99215686, 0.77759104, 0.57366947, 1.0],  # Cor para 50 mil a 100 mil
-    [0.99215686, 0.62689076, 0.34061625, 1.0],  # Cor para 100 mil a 250 mil
-    [0.96526611, 0.47226891, 0.14341737, 1.0],  # Cor para 250 mil a 500 mil
-    [0.87787115, 0.31932773, 0.02408964, 1.0]   # Cor para acima de 500 mil
-]
-
-legend_labels = [('1 - 10 mil'), ('10 mil - 50 mil'), ('50 mil - 100 mil'),('100 mil - 250 mil'),('250 mil - 500 mil'),('Acima de 500 mil')]
-
-def get_color(value):
-    for i, (start, end) in enumerate(value_intervals):
-        if start <= value < end:
-            return colors_rgba[i]
-    return colors_rgba[-1]  # Retorna a última cor para valores maiores que o último intervalo
-
-# Adicione uma coluna 'color' ao DataFrame df_country com a cor correspondente a cada país
-df_country['color'] = df_country['Occurrences'].apply(lambda x: get_color(x))
-
-# Merge com o DataFrame world
-world = pd.merge(world, df_country[['Country', 'color']], left_on='name', right_on='Country', how='left')
-
-# Preencher os valores ausentes com uma cor padrão
-world['color'] = world['color'].fillna('gray')
-#print(world.head(5))
-
+# Create the images for each month
 images = []
-# Plotar o mapa usando as cores definidas
+months = []
+
+# Iterate over each month in the DataFrame
 for month in df_country['Month'].unique():
     df_month = df_country[df_country['Month'] == month]
+  
+    
+    # Update country names
     df_month['Country'] = df_month['Country'].map(country_mapping).fillna(df_month['Country'])
+
+    fig, ax = plt.subplots(figsize=(20, 15))
     
-    fig, ax = plt.subplots(figsize=(10, 10))
-    
-    # merged_df = pd.merge(world, df_month, left_on='name', right_on='Country', how='left')
-    # print(merged_df.head(5))
-    print(world.head(5))
-    # world['occurrences'] = merged_df['Occurrences'].fillna(0)
-    # world['color'] = merged_df['color']
+
+    # Merge the world and df_month DataFrames based on the country name
+    merged_df = pd.merge(world, df_month, left_on='name', right_on='Country', how='left')
+
+    # Fill NaN values in the 'occurrences' column with corresponding values from the merged_df DataFrame
+    world['occurrences'] = merged_df['Occurrences'].fillna(0)
+
+    # Remove unnecessary columns from the world DataFrame
     world.drop(columns=['Country', 'Month', 'Latitude', 'Longitude'], inplace=True, errors='ignore')
+
+    world.plot(ax=ax, column='occurrences', missing_kwds={'color': 'lightgrey'}, legend=True, cmap=custom_cmap, edgecolor='black', linewidth=0.1, k = 7)
+    #ax.set_facecolor('Gainsboro')
+    ax.set_axis_off()
     
-    world.plot(ax=ax, color=world['color'], legend=True, scheme="quantiles", legend_kwds={"loc": "upper right", "fmt": "{:.0f}", "title": "Occurrences", 'labels':legend_labels, 'facecolor': 'DarkGray'}, edgecolor='black', linewidth=0.1)
-    
-    ax.set_facecolor('Gainsboro')
+
+    leg = ax.get_legend()
+    leg.set_fontsize(16)
+    # Set font size for legend
+
+    # Turn off axis ticks
     ax.set_xticks([])
     ax.set_yticks([])
-    ax.set_title(f'Number of srcIP - MiscAttack in {month}')
+
+    ax.set_title(f'Number of srcIP - MiscAttack in {month}', fontsize=20)
     
-    directory = 'teste-dict/'
+    # ax.set_axis_off()
+    # plt.tight_layout()
+    directory = 'gpd-maps-images/'
+    # plt.savefig(os.path.join(directory, f"Figure_{i}.png"))
     plt.savefig(os.path.join(directory, f'srcIPs_{month}.png'), dpi=150)
     plt.close()
-    
-    images.append(imageio.imread(f'teste-dict/srcIPs_{month}.png'))
 
+    months.append(month)
+
+# Custom sorting function to convert month-year string to datetime object
+def custom_sort(month_year):
+    return datetime.strptime(month_year, "%Y-%m")
+
+# Sort the list
+sorted_month_year_list = sorted(months, key=custom_sort)
+
+# Iterar sobre cada mês no DataFrame
+for month in sorted_month_year_list:
+    images.append(imageio.imread(f'{directory}srcIPs_{month}.png'))
+
+# Salvar as imagens ordenadas como GIF
 imageio.mimsave(os.path.join(directory, 'srcIPs.gif'), images, fps=1)
-
 

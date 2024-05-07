@@ -1,105 +1,112 @@
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
-import seaborn as sns
 import geopandas as gpd
+import imageio
 import pandas as pd
 import os
+
+from datetime import datetime
 
 # Load data
 df = pd.read_csv('locations_info.csv')
 
 # Group by month and country
-df_country = df.groupby(['Month', 'Country']).agg({'Occurrences': 'sum', 'Latitude': 'first', 'Longitude': 'first'}).reset_index()
+df_country = df.groupby(['Month', 'Country']).agg({'Occurrences': 'sum'}).reset_index()
 
-# Mapeamento de nomes de Countryes
+# Mapeamento de nomonth de países
 mapeamento_paises = {
     'United States': 'United States of America',
     'The Netherlands': 'Netherlands'
-   
 }
-
-world = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
-world = world[['name', 'geometry']]
+colors_hex = ['#fee5d9','#fcbba1','#fc9272','#fb6a4a','#ef3b2c','#cb181d','#99000d']
 
 # Definir os intervalos de valores e as cores correspondentes
-value_intervals = [(1, 500), (500, 1000), (1000, 50000), (50000, 100000), (100000, 500000), (500000, float('inf'))]
+value_intervals = [(1, 11), (11, 100), (101, 1000), (1001, 10000), (10001, 100000), (100001, 1000000), (1000000, float('inf'))]
+#colors_hex = ['#67a9cf', '#d1e5f0', '#fddbc7', '#ef8a62', '#b2182b']
 
-colors_rgba = [
-    [1.0, 0.96078431, 0.92156863, 1.0],  # Cor para 1 a 10 mil
-    [0.99551821, 0.88963585, 0.78319328, 1.0],  # Cor para 10 mil a 50 mil
-    [0.99215686, 0.77759104, 0.57366947, 1.0],  # Cor para 50 mil a 100 mil
-    [0.99215686, 0.62689076, 0.34061625, 1.0],  # Cor para 100 mil a 250 mil
-    [0.96526611, 0.47226891, 0.14341737, 1.0],  # Cor para 250 mil a 500 mil
-    [0.87787115, 0.31932773, 0.02408964, 1.0]   # Cor para acima de 500 mil
-]
+#['#b2182b','#ef8a62','#fddbc7','#f7f7f7','#d1e5f0','#67a9cf','#2166ac']
+# ['#fee5d9','#fcbba1','#fc9272','#fb6a4a','#ef3b2c','#cb181d','#99000d'] -> cores vermelho
 
-legend_labels = [('1 - 500'), ('500 - 1 mil'), ('1 mil - 50 mil'),('50 mil - 100 mil'),('100 mil - 500 mil'),('Acima de 500 mil')]
-
-def get_color(value):
-    for i, (start, end) in enumerate(value_intervals):
-        print('start: ', start)
-        print('end: ', end)
-        print('value: ', value)
-        if start <= value < end:
-            print('retornou: ', colors_rgba[i])
-            return colors_rgba[i]
-    return colors_rgba[-1]  # Retorna a última cor para valores maiores que o último intervalo
 
 # Adicione uma coluna 'color' ao DataFrame df_country com a cor correspondente a cada país
+def get_color(value):
+    for i, (start, end) in enumerate(value_intervals):
+        if start <= value < end:
+            return colors_hex[i]
+    return colors_hex[-1]
+
 df_country['color'] = df_country['Occurrences'].apply(lambda x: get_color(x))
-print(df_country.head(5))
 
-# Merge com o DataFrame world
-world = pd.merge(world, df_country[['Country', 'color']], left_on='name', right_on='Country', how='left')
-
-# Preencher os valores ausentes com uma cor padrão
-world['color'] = world['color'].fillna('gray')
-print(world.head(5))
-
-i = 1
+# Carregar os dados do mundo
+world = gpd.read_file(gpd.datasets.get_path("naturalearth_lowres"))
 images = []
-# Itera sobre cada Month no DataFrame
-for mes in df_country['Month'].unique():
-    df_mes = df_country[df_country['Month'] == mes]
-    print('\nMês: ', mes)
+months = []
+# Iterar sobre cada mês no DataFrame
+for i, month in enumerate(df_country['Month'].unique(), start=1):
+    df_month = df_country[df_country['Month'] == month]
+    df_month['Country'] = df_month['Country'].map(mapeamento_paises).fillna(df_month['Country'])
 
-    # Atualiza os nomes dos Countryes
-    df_mes['Country'] = df_mes['Country'].map(mapeamento_paises).fillna(df_mes['Country'])
+    
+    legend_labels = ['1 - 10', '11 - 100','101 - 1000', '1001 - 10.000', '10.001 - 100.000','100.001 - 1.000.000', '1.000.000 +']
 
-    fig, ax = plt.subplots(1, 1, figsize = (10,10))
+    fig, ax = plt.subplots(figsize=(10, 10))
+    legend_patches = [plt.Rectangle((0, 0), 1, 1, color=color) for color in colors_hex]
+    # Definir cor de fundo para cinza claro
+    #fig.patch.set_facecolor('#f0f0f0')
 
-    # Itera sobre as linhas do DataFrame para o Month atual
-    for index, row_mes in df_mes.iterrows():
-        pais = row_mes['Country']
-        count = row_mes['Occurrences']
-        country_color = row_mes['color']
+    world.boundary.plot(ax=ax, color="black", linewidth=0.3)
 
-        # Plotar mapa do mundo
-        world.boundary.plot(ax=ax, color="black", linewidth=0.5)
+    for country_name in world["name"]:
+        if country_name not in df_month["Country"].values:
+            country = world[world["name"] == country_name]
+            country.plot(ax=ax, color="lightgrey")
 
-        # Calcular a cor com base nas Occurrences
-        # color_index = int((count / df_mes['Occurrences'].max()) * (len(colors_normalized) - 1))
-        # print('color index: ', color_index)
-        # country_color = plt.cm.colors.to_rgba(colors_normalized[color_index], alpha=1.0)
+    for _, row in df_month.iterrows():
+        pais = row['Country']
+        country_color = row['color']
 
-        # Verificar se o Country está presente no dataframe do mundo
         if pais in world["name"].values:
             country = world[world["name"] == pais]
-            print('country color: ',country_color)
             country.plot(ax=ax, color=country_color)
-            #print(f'{pais} adicionado')
 
-    # Adicionar legenda
-    # add the patches to the map
-    #ax.legend(handles=patches, loc="lower left", fontsize='small')
-    # Desativar ticks do eixo
+    ax.legend(legend_patches, legend_labels, loc="lower left", fontsize='small')
+    #ax.set_facecolor('Gainsboro')
     ax.set_xticks([])
     ax.set_yticks([])
+
     directory = 'teste-dict/'
-    # Definir título do gráfico
-    plt.title(f"Distribuição de srcIP MiscAttack por Country - Month: {mes}")
-    # Salvar a figura dentro da pasta com o nome do Month
-    plt.savefig(os.path.join(directory, f"Figure_{i}.png"))
-    i += 1
-    # Fechar a figura para liberar memória
-    plt.close()
+
+    ax.set_title(f'Number of srcIP - MiscAttack in {month}')
+    directory = 'gpd-maps-images/global-comp/'
+    # plt.savefig(os.path.join(directory, f"Figure_{i}.png"))
+    plt.savefig(os.path.join(directory, f'srcIPs_{month}.png'), dpi=150)
+    
+    months.append(month)
+
+
+# Custom sorting function to convert month-year string to datetime object
+def custom_sort(month_year):
+    return datetime.strptime(month_year, "%Y-%m")
+
+# Sort the list
+sorted_month_year_list = sorted(months, key=custom_sort)
+
+# Print the sorted list
+print(sorted_month_year_list)
+
+# Ordenar as imagens com base nos meses
+#images_sorted = [img for _, img in sorted(zip(months, images))]
+
+
+# Iterar sobre cada mês no DataFrame
+for month in sorted_month_year_list:
+    images.append(imageio.imread(f'{directory}srcIPs_{month}.png'))
+
+
+# Ordenar as imagens com base nos meses
+#images_sorted = [img for _, img in sorted(zip(months, images))]
+
+# Salvar as imagens ordenadas como GIF
+imageio.mimsave(os.path.join(directory, 'srcIPs.gif'), images, fps=1)
+
+plt.close()
+
