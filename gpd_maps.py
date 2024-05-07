@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib.colors import ListedColormap
+from matplotlib.colors import LinearSegmentedColormap
 import geopandas as gpd
 import numpy as np
 import pandas as pd
@@ -7,7 +8,7 @@ import imageio
 import os
 
 # Load data
-df = pd.read_csv('csv/locations_info.csv')
+df = pd.read_csv('locations_info.csv')
 
 # Group by month and country
 df_country = df.groupby(['Month', 'Country']).agg({'Occurrences': 'sum', 'Latitude': 'first', 'Longitude': 'first'}).reset_index()
@@ -32,16 +33,18 @@ colors_rgba = [
     [0.49803922, 0.15294118, 0.01568627, 1.0]
 ]
 # Crie uma paleta de cores personalizada usando as cores RGBA
-custom_cmap = ListedColormap(colors_rgba)
+#custom_cmap = ListedColormap(colors_rgba)
 
 
 
 # Create the images for each month
 images = []
+ips_mes = []
 
 # Iterate over each month in the DataFrame
 for month in df_country['Month'].unique():
     df_month = df_country[df_country['Month'] == month]
+    
 
     # Update country names
     df_month['Country'] = df_month['Country'].map(country_mapping).fillna(df_month['Country'])
@@ -66,22 +69,26 @@ for month in df_country['Month'].unique():
         bins = np.linspace(world['occurrences'].min(), world['occurrences'].max(), 4)  # Define 5 bins
         world['occurrences_group'] = np.digitize(world['occurrences'], bins, right=True)
         k = 3
-    elif( world['occurrences'].max() < 300):
+    elif( world['occurrences'].max() < 600):
         # Group the occurrences into bins for legend
         bins = np.linspace(world['occurrences'].min(), world['occurrences'].max(), 5)  # Define 5 bins
         world['occurrences_group'] = np.digitize(world['occurrences'], bins, right=True)
         k = 4
     else:
         # Group the occurrences into bins for legend
-        bins = np.linspace(world['occurrences'].min(), world['occurrences'].max(), 6)  # Define 5 bins
+        bins = np.linspace(world['occurrences'].min(), world['occurrences'].max(), 10)  # Define 5 bins
         world['occurrences_group'] = np.digitize(world['occurrences'], bins, right=True)
-        k = 5
+        k = 9
 
     #Plot the map
     # Configurar a legenda manualmente com os limites dos bins
     legend_labels = []
     for i in range(len(bins)-1):
         legend_labels.append(f"{bins[i]:.0f} - {bins[i+1]:.0f}")
+
+    breakpoints = bins[:-1]
+    # Crie um LinearSegmentedColormap com base nas cores e pontos de quebra
+    custom_cmap = LinearSegmentedColormap.from_list("custom_cmap", list(zip(np.linspace(0, 1, len(colors_rgba)), colors_rgba)), N=len(breakpoints))
 
     #print(legend_labels) #saida: ['0 - 7736', '7736 - 15473', '15473 - 23209', '23209 - 30946', '30946 - 38682']
 

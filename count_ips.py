@@ -17,15 +17,15 @@ df = df.query('Classification == "MiscAttack"')
 qntd_ips_unicos = df['srcIP'].nunique()
 print(f'Quantidade de srcIP unicos:', qntd_ips_unicos)
 
-df_filtrado = df[['srcIP', 'Month']]
-num_meses = df_filtrado['Month'].nunique()
+#df_filtrado = df[['srcIP', 'Month']]
+num_meses = df['Month'].nunique()
 print("Número de meses únicos:", num_meses)
 
 # Agrupe os dados por 'Month'
-grouped = df_filtrado.groupby('Month')
+grouped = df.groupby('Month')
 
 # Use a função nunique() em cada grupo para contar a quantidade de endereços IP únicos
-quantidade_ips_por_mes = grouped['srcIP'].nunique()
+quantidade_ips_por_mes = grouped['srcIP'].count()
 
 # Obter os meses e a quantidade de IPs
 meses = quantidade_ips_por_mes.index
