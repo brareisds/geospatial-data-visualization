@@ -38,7 +38,6 @@ for month in df_country['Month'].unique():
     df_month['Country'] = df_month['Country'].map(country_mapping).fillna(df_month['Country'])
 
     fig, ax = plt.subplots(figsize=(20, 15))
-    
 
     # Merge the world and df_month DataFrames based on the country name
     merged_df = pd.merge(world, df_month, left_on='name', right_on='Country', how='left')

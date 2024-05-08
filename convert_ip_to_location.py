@@ -29,9 +29,9 @@ invalid_ips = []
 
 print("Processando IPs...")
 with open(caminho_input, 'r') as input:
-    with open("dados_srcIP_paises.csv", 'w', newline='') as output:
+    with open("dados_dstIP.csv", 'w', newline='') as output:
         escritor_csv = csv.writer(output)
-        escritor_csv.writerow(['Fake_IP', 'País', 'Estado', 'Cidade', 'Latitude', 'Longitude'])
+        escritor_csv.writerow(['Fake_IP', 'Country', 'State', 'City', 'Latitude', 'Longitude'])
 
         primeira_linha = True
         for linha in input:
