@@ -35,7 +35,7 @@ def process_groups(df, locations):
     grouped = df.groupby('Month')
 
     for month, group_data in grouped:
-        for ip in group_data['srcIP']:
+        for ip in group_data['dstIP']:
             total_ips += 1
             if ip in locations:
                 country, state, city, latitude, longitude = locations[ip]
@@ -54,7 +54,7 @@ def process_groups(df, locations):
     if(len(invalid_ips) > 0):
         directory = 'csv/'
         df_errors = pd.DataFrame(invalid_ips)
-        output = 'invalid_ips.csv'
+        output = 'invalid_dstIP.csv'
         df_errors.to_csv(os.path.join(directory, output), index=False)
         print("file " + output + " generated\n")
 
