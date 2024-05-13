@@ -40,7 +40,7 @@ def main():
 if __name__ == '__main__':
     main()
     # File created
-    df_countries = pd.read_csv("csv/locations__dstIP_info.csv")
+    df_countries = pd.read_csv("csv/locations_dstIP_info.csv")
     # Group by month and country, summing the number of occurrences and keeping the coordinates of the first city
     df_countries = df_countries.groupby(['Month', 'Country']).agg({'Occurrences': 'sum', 'Latitude': 'first', 'Longitude': 'first'}).reset_index()
     print(df_countries.head(10))

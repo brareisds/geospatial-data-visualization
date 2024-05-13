@@ -8,7 +8,7 @@ import imageio
 import os
 
 # Load data
-df = pd.read_csv('locations_info.csv')
+df = pd.read_csv('csv/locations_dstIP_info.csv')
 
 # Group by month and country
 df_country = df.groupby(['Month', 'Country']).agg({'Occurrences': 'sum', 'Latitude': 'first', 'Longitude': 'first'}).reset_index()
@@ -109,13 +109,13 @@ for month in df_country['Month'].unique():
     ax.set_title(f'Number of srcIP - MiscAttack in {month}')
     # ax.set_axis_off()
     # plt.tight_layout()
-    directory = 'gpd-maps-images/'
+    directory = 'gpd-maps-images/dstIPs/'
     # plt.savefig(os.path.join(directory, f"Figure_{i}.png"))
-    plt.savefig(os.path.join(directory, f'srcIPs_{month}.png'), dpi=150)
+    plt.savefig(os.path.join(directory, f'dstIPs_{month}.png'), dpi=150)
     plt.close()
 
-    images.append(imageio.imread(f'gpd-maps-images/srcIPs_{month}.png'))
+    images.append(imageio.imread(f'gpd-maps-images/dstIPs_{month}.png'))
 
 # Save the images as a gif
-imageio.mimsave(os.path.join(directory, 'srcIPs.gif'), images, fps=1)
+imageio.mimsave(os.path.join(directory, 'dstIPs.gif'), images, fps=1)
 
