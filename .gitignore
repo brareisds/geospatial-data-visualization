@@ -1,2 +1,2 @@
-*.parquet
-*.csv
+csv/
+gpd-maps-images/
