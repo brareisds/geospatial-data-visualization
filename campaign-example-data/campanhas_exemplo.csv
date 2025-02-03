@@ -1,0 +1,18 @@
+name,startDate,endDate,description,states
+Campanha 1,01/01/2022,31/12/2022,Descrição da Campanha 1,Paraná
+Campanha 1,01/01/2022,31/12/2022,Descrição da Campanha 1,Amazônas
+Campanha 1,01/01/2022,31/12/2022,Descrição da Campanha 1,Distrito Federal
+Campanha 2,01/02/2022,28/02/2022,Descrição da Campanha 2,São Paulo
+Campanha 2,01/02/2022,28/02/2022,Descrição da Campanha 2,Amazônas
+Campanha 2,01/02/2022,28/02/2022,Descrição da Campanha 2,Rio De Janeiro
+Campanha 2,01/02/2022,28/02/2022,Descrição da Campanha 2,Santa Catarina
+Campanha 3,01/03/2022,31/03/2022,Descrição da Campanha 3,Rio De Janeiro
+Campanha 4,01/04/2022,30/04/2022,Descrição da Campanha 4,Minas Gerais
+Campanha 5,01/05/2022,31/05/2022,Descrição da Campanha 5,Bahia
+Campanha 6,01/06/2022,30/06/2022,Descrição da Campanha 6,Pernambuco
+Campanha 7,01/07/2022,31/07/2022,Descrição da Campanha 7,Rio Grande Do Sul
+Campanha 8,01/08/2022,31/08/2022,Descrição da Campanha 8,Santa Catarina
+Campanha 9,01/09/2022,30/09/2022,Descrição da Campanha 9,Ceará
+Campanha 10,01/10/2022,31/10/2022,Descrição da Campanha 10,Amazônas
+Campanha 11,01/11/2022,30/11/2022,Descrição da Campanha 11,Goiás
+Campanha 12,01/12/2022,31/12/2022,Descrição da Campanha 12,Pará
